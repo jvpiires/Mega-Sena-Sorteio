@@ -1,806 +1,712 @@
-# 🎵 Sistema de Gestão Discográfica (SGD)
+# 📂 Guia de Estrutura do Projeto SGD
 
-> **Desafio Full Stack SEPLAG-MT:** Sistema completo para gerenciar álbuns, artistas e usuários com uma interface intuitiva e eficiente. Arquitetura moderna baseada em microsserviços com Spring Boot 3, React 19, Docker, MinIO (S3), JWT e Sync de Dados.
-s
----
-
-## 📚 Documentação
-
-### 🚀 **[Guia de Execução](README.md)** (Este arquivo)
-Instruções para rodar o projeto localmente, com Docker e testes.
-
-### 📖 **[Documentação Técnica](TECHNICAL_DOC.md)** ⭐
-Documentação detalhada de cada categoria:
-- Backend (Java + Spring Boot)
-- Frontend (React + TypeScript)
-- Banco de Dados (PostgreSQL + Flyway)
-- Segurança (JWT + Rate Limiting)
-- Infraestrutura (Docker)
-- Decisões Técnicas
+## Índice
+1. [Visão Geral](#visão-geral)
+2. [Estrutura de Pastas](#estrutura-de-pastas)
+3. [Arquitetura do Projeto](#arquitetura-do-projeto)
+4. [Stack de Tecnologias](#stack-de-tecnologias)
+5. [Fluxo de Dados](#fluxo-de-dados)
+6. [Como Contribuir](#como-contribuir)
 
 ---
 
-## 🎯 Resumo de Stacks Utilizadas
+## 🎯 Visão Geral
 
-### 🔵 Backend
-```
-Java 21 → Spring Boot 3.4.1 → PostgreSQL → MinIO
-JWT Authentication | Bucket4j Rate Limiting | Flyway Migrations
-```
+**SGD (Sistema de Gestão Discográfica)** é uma aplicação full-stack modern para gerenciar:
+- 🎵 **Álbuns e Artistas**
+- 👥 **Usuários e Permissões**
+- 🌍 **Regionais/Localidades**
+- 💾 **Armazenamento de Mídia** (MinIO S3)
+- 🔐 **Autenticação e Autorização** (JWT)
 
-### ⚛️ Frontend
-```
-React 19 → TypeScript 5.9 → Vite 7.2 → Tailwind CSS 4.1
-Zod Validation | React Hook Form | Vitest Testing
-```
-
-### 🐳 Infraestrutura
-```
-Docker | Docker Compose | PostgreSQL 15 | MinIO | Nginx
-```
+**Arquitetura:** Microserviços com containerização Docker, REST API e WebSocket em tempo real.
 
 ---
 
-## 🚀 Início Rápido
-
----
-
-## 🚀 Início Rápido
-
-Se você tem Docker instalado e apenas quer fazer o projeto funcionar rapidamente:
-
-```bash
-# Clonar ou extrair o projeto
-git clone <seu-repositorio> projeto-seplag
-cd projeto-seplag
-
-# Iniciar todos os serviços
-docker-compose up --build
-
-# Abrir no navegador
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:3333
-# MinIO Console: http://localhost:9001
-```
-
-Pronto! O sistema estará rodando em aproximadamente **3-5 minutos** na primeira execução.
-
----
-
-## 📋 Pré-Requisitos
-
-Antes de começar, você precisa ter instalado em sua máquina:
-
-### Obrigatório
-
-| Software | Versão | Link | Descrição |
-|----------|--------|------|-----------|
-| **Docker Desktop** | 4.0+ | [Baixar](https://www.docker.com/products/docker-desktop) | Plataforma para containerização |
-| **Git** | 2.30+ | [Baixar](https://git-scm.com/) | Controle de versão |
-
-### Opcional (para desenvolvimento local)
-
-| Software | Versão | Link | Descrição |
-|----------|--------|------|-----------|
-| **Node.js** | 18 LTS+ | [Baixar](https://nodejs.org/) | Runtime JavaScript (para testes locais) |
-| **Java JDK** | 21 | [Baixar](https://adoptopenjdk.net/) | Java Development Kit (para build local) |
-| **PostgreSQL Client** | 15+ | [Baixar](https://www.postgresql.org/download/) | Cliente PostgreSQL (para debugging) |
-
-### Requisitos de Sistema
-
-- **RAM:** Mínimo 4GB (recomendado 8GB)
-- **Espaço em Disco:** Mínimo 5GB
-- **Processador:** Intel/AMD dual-core (recomendado quad-core)
-- **Internet:** Necessária para download de imagens Docker
-
-### Windows Específico
-
-⚠️ **Importante:** No Windows, você precisa de **WSL 2** (Windows Subsystem for Linux 2)
-
-```powershell
-# Verificar se tem WSL 2 instalado
-wsl --list --verbose
-
-# Se não tem, instale com (requer reinicialização):
-wsl --install
-```
-
----
-
-## 💾 Instalação e Setup
-
-### Passo 1: Preparar o Ambiente
-
-```bash
-# Clonar o repositório
-git clone <url-do-repositorio> projeto-seplag
-cd projeto-seplag
-
-# Se está no Windows, certifique-se que WSL 2 está ativo
-# Se é Mac/Linux, ignore este passo
-```
-
-### Passo 2: Verificar Docker
-
-```bash
-# Verificar versão do Docker
-docker --version
-
-# Verificar se Docker está rodando
-docker ps
-
-# Se obteve um erro, abra Docker Desktop e tente novamente
-```
-
-### Passo 3: Iniciar o Projeto com Docker Compose
-
-```bash
-# Navegar até a pasta do projeto
-cd /caminho/para/projeto-seplag
-
-# Construir e iniciar todos os containers
-docker-compose up --build
-
-# Alternativamente, para rodar em background:
-docker-compose up -d
-```
-
-### Passo 4: Verificar Status
-
-```bash
-# Listar containers rodando
-docker-compose ps
-
-# Deve mostrar algo como:
-# NAME                  STATUS
-# sgd-postgres-v1       Up 2 minutes
-# sgd-minio-v1          Up 2 minutes
-# sgd-backend-v1        Up 2 minutes
-# sgd-frontend-v1       Up 1 minute
-```
-
-### Passo 5: Acessar a Aplicação
-
-Abra seu navegador e acesse:
-
-| Serviço | URL | Login |
-|---------|-----|-------|
-| 🏠 **Frontend** | [http://localhost:5173](http://localhost:5173) | `email@domain.com` / `senha123` |
-| ⚙️ **API Backend** | [http://localhost:3333](http://localhost:3333) | N/A |
-| 💾 **MinIO Console** | [http://localhost:9001](http://localhost:9001) | `admin_storage` / `Storage_Key_2026!` |
-| 🐘 **PostgreSQL** | `localhost:5432` | `srv_discografia` / `P@ssw0rd_Seplag2026!` |
-
----
-
-## 🔧 Como Desenvolver
-
-### Modificar o Frontend
-
-```bash
-# 1. Parar o container do frontend (sem parar os outros)
-docker-compose stop frontend
-
-# 2. Ir para pasta do frontend
-cd frontend
-
-# 3. Instalar dependências (primeira vez)
-npm install
-
-# 4. Rodar em modo desenvolvimento
-npm run dev
-
-# 5. O site estará em http://localhost:5173
-# Mudanças são refletidas automaticamente (hot reload)
-
-# 6. Para voltar ao Docker
-npm run build
-docker-compose up --build frontend
-```
-
-### Modificar o Backend
-
-```bash
-# 1. Você pode modificar o código em src/main/java
-
-# 2. Fazer rebuild do container
-docker-compose up --build backend
-
-# 3. Ou usar Maven localmente (se tiver Java 21 instalado)
-cd backend
-./mvnw clean package
-```
-
-### Acessar Logs
-
-```bash
-# Ver logs em tempo real
-docker-compose logs -f backend
-
-# Ver logs de um serviço específico
-docker-compose logs -f frontend
-docker-compose logs -f database
-
-# Ver últimas 100 linhas
-docker-compose logs --tail=100 backend
-```
-
----
-
-## 🧪 Testando o Sistema
-
-### Teste 1: Verificar Saúde da API
-
-```bash
-# O backend deve responder
-curl http://localhost:3333/actuator/health
-
-# Resposta esperada:
-# {"status":"UP"}
-```
-
-### Teste 2: Listar Álbuns (API)
-
-```bash
-curl http://localhost:3333/api/v1/albuns
-```
-
-### Teste 3: Testes Automatizados (Frontend)
-
-```bash
-# Ir para o frontend
-cd frontend
-
-# Instalar dependências (primeira vez)
-npm install
-
-# Rodar testes
-npm test
-
-# Rodar testes com coverage
-npm test -- --coverage
-```
-
-### Teste 4: Acessar Banco de Dados
-
-```bash
-# Conectar ao PostgreSQL
-docker exec -it sgd-postgres-v1 psql -U srv_discografia -d db_discografia_core
-
-# Alguns comandos úteis no psql:
-\dt                    # Listar todas as tabelas
-SELECT * FROM users;   # Ver usuários
-\q                     # Sair
-```
-
-### Teste 5: Fazer Login na Aplicação
-
-1. Abra [http://localhost:5173](http://localhost:5173)
-2. Clique em "Login"
-3. Use as credenciais fornecidas abaixo
-4. Navegue pela aplicação
-
----
-
-## 🏗️ Arquitetura e Componentes
-
-### Visão Geral da Arquitetura
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   Cliente (Navegador)               │
-│          http://localhost:5173 (React 19)          │
-└──────────────────────┬──────────────────────────────┘
-                       │ HTTP/WebSocket
-                       ↓
-┌─────────────────────────────────────────────────────┐
-│         NGINX (Reverse Proxy & Static Files)        │
-│         http://localhost:5173 e localhost:3333      │
-└──────────────────────┬──────────────────────────────┘
-                       │ HTTP
-      ┌────────────────┼────────────────┐
-      ↓                ↓                ↓
-┌───────────┐  ┌──────────────┐  ┌──────────────┐
-│ Backend   │  │    MinIO     │  │  PostgreSQL  │
-│ Spring    │  │   (Storage)  │  │  (Database)  │
-│ Boot API  │  │  :9000/9001  │  │    :5432     │
-│ :3333     │  └──────────────┘  └──────────────┘
-└───────────┘
-```
-
-### Banco de Dados (PostgreSQL)
-
-**Função:** Armazena todos os dados persistentes
-
-| Tabela | Descrição |
-|--------|-----------|
-| `users` | Usuários do sistema |
-| `regionais` | Regiões geográficas |
-| `artists` | Artistas |
-| `albums` | Álbuns |
-| `album_artist` | Relação muitos-para-muitos |
-| `user_favorites` | Favoritos dos usuários |
-
-```bash
-# Conectar ao banco
-docker exec -it sgd-postgres-v1 psql -U srv_discografia -d db_discografia_core
-```
-
-### Backend (Spring Boot)
-
-**Função:** Processamento de lógica de negócio e API REST
-
-**Endpoints Principais:**
-
-```
-GET  /api/v1/users           - Listar usuários
-POST /api/v1/users           - Criar usuário
-GET  /api/v1/albuns          - Listar álbuns
-POST /api/v1/albuns          - Criar álbum
-GET  /api/v1/artistas        - Listar artistas
-POST /api/v1/artistas        - Criar artista
-GET  /api/v1/favoritos       - Meus favoritos
-POST /api/v1/favoritos       - Adicionar favorito
-```
-
-### Frontend (React)
-
-**Função:** Interface de usuário interativa
-
-**Páginas Principais:**
-- 🏠 Home - Dashboard
-- 📀 Álbuns - Listagem e detalhes
-- 🎤 Artistas - Listagem e detalhes
-- ❤️ Favoritos - Álbuns salvos
-- ⚙️ Admin - Gerenciamento (requer permissão)
-
-### Armazenamento (MinIO)
-
-**Função:** Armazenar imagens e arquivos (compatível com S3)
-
-```bash
-# Acessar console MinIO
-# URL: http://localhost:9001
-# Usuário: admin_storage
-# Senha: Storage_Key_2026!
-```
-
----
-
-## 🔑 Credenciais Padrão
-
-### Usuários Padrão da Aplicação
-
-| Email | Senha | Tipo | Status |
-|-------|-------|------|--------|
-| admin@seplag.com | senha123 | Administrador | Ativo |
-| user@seplag.com | senha123 | Usuário | Ativo |
-
-> ℹ️ **Nota:** Essas credenciais são criadas automaticamente pelo script de migração (`V11__insert_sample_data_artists_albums.sql`)
-
-### Serviços e Acessos
-
-| Serviço | Usuário | Senha | Acesso |
-|---------|---------|-------|--------|
-| PostgreSQL | srv_discografia | P@ssw0rd_Seplag2026! | localhost:5432 |
-| MinIO | admin_storage | Storage_Key_2026! | localhost:9001 |
-| Backend API | N/A | N/A | localhost:3333 |
-
----
-
-## 📂 Estrutura do Projeto
+## 📁 Estrutura de Pastas
 
 ```
 projeto-seplag/
 │
-├── backend/                          # Código-fonte do servidor
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/br/gov/mt/seplag/sgd/
-│   │   │   │   ├── config/           # Configurações (JWT, CORS, Rate Limiting)
-│   │   │   │   ├── controller/       # Endpoints REST
-│   │   │   │   ├── entity/           # Modelos de dados
-│   │   │   │   ├── repository/       # Acesso ao banco de dados
-│   │   │   │   ├── service/          # Lógica de negócio
-│   │   │   │   └── SgdBackendApplication.java
-│   │   │   └── resources/
-│   │   │       ├── application.yml   # Configurações
-│   │   │       └── db/migration/     # Scripts SQL (Flyway)
-│   │   └── test/
-│   │       └── java/                 # Testes unitários
-│   ├── pom.xml                       # Dependências Maven
-│   ├── mvnw                          # Maven wrapper (Unix)
-│   └── mvnw.cmd                      # Maven wrapper (Windows)
+├── 📁 backend/                    # 🔵 API Spring Boot (Java 21)
+│   ├── src/main/java/
+│   │   └── br/gov/mt/seplag/sgd/
+│   │       ├── config/            # ⚙️ Configurações da aplicação
+│   │       ├── controller/        # 🎮 Endpoints REST
+│   │       ├── service/           # 💼 Lógica de negócio
+│   │       ├── repository/        # 🗄️ Acesso a dados (JPA)
+│   │       ├── entity/            # 📊 Modelos de dados
+│   │       ├── dto/               # 📝 Data Transfer Objects
+│   │       ├── exception/         # ⚠️ Tratamento de erros
+│   │       ├── security/          # 🔐 JWT e autenticação
+│   │       ├── filter/            # 🔍 Filtros HTTP (Rate Limiting)
+│   │       └── util/              # 🛠️ Utilitários
+│   │
+│   ├── src/main/resources/
+│   │   ├── application.yml        # 📋 Config Spring
+│   │   ├── application.properties # 🔧 Propriedades
+│   │   └── db/migration/          # 🐘 Scripts SQL (Flyway)
+│   │       ├── V1__init_schema.sql
+│   │       ├── V2__create_table_users.sql
+│   │       └── ...
+│   │
+│   ├── src/test/java/             # ✅ Testes unitários
+│   │
+│   ├── pom.xml                    # 📦 Dependências Maven
+│   ├── mvnw & mvnw.cmd            # 🚀 Maven Wrapper
+│   ├── dockerfile                 # 🐳 Imagem Docker
+│   └── .gitignore
 │
-├── frontend/                         # Código-fonte da interface
+├── 📁 frontend/                   # ⚛️ App React (TypeScript)
 │   ├── src/
-│   │   ├── components/               # Componentes React
-│   │   │   ├── Layout/               # Cabeçalho, menu, rodapé
-│   │   │   ├── AlbumsDataTable/      # Tabela de álbuns
-│   │   │   ├── ArtistsDataTable/     # Tabela de artistas
-│   │   │   ├── UsersManagement/      # Gerenciamento de usuários
-│   │   │   ├── RegionaisManagement/  # Gerenciamento de regiões
-│   │   │   └── Modal/                # Modais (login, criar, etc)
-│   │   ├── pages/                    # Páginas principais
-│   │   │   ├── home/                 # Home page
-│   │   │   ├── albums/               # Página de álbuns
-│   │   │   ├── artists/              # Página de artistas
-│   │   │   ├── favorites/            # Página de favoritos
-│   │   │   └── admin/                # Painel administrativo
-│   │   ├── services/                 # Serviços (API calls)
-│   │   │   ├── apiClient.ts          # Cliente HTTP com Axios
-│   │   │   ├── authService.ts        # Autenticação
-│   │   │   ├── albumService.ts       # Serviço de álbuns
-│   │   │   └── webSocketService.ts   # WebSocket
-│   │   ├── contexts/                 # Contexto React (Estado global)
-│   │   │   └── AuthContext.tsx       # Autenticação global
-│   │   ├── types/                    # Tipos TypeScript
-│   │   ├── utils/                    # Funções auxiliares
-│   │   ├── App.tsx                   # Componente raiz
-│   │   └── main.tsx                  # Entry point
-│   ├── package.json                  # Dependências npm
-│   ├── tsconfig.json                 # Configuração TypeScript
-│   ├── tailwind.config.js            # Configuração Tailwind CSS
-│   └── vite.config.ts                # Configuração Vite
+│   │   ├── 📁 components/         # 🧩 Componentes reutilizáveis
+│   │   │   ├── Layout/            # 📐 Layout principal
+│   │   │   │   ├── Header/
+│   │   │   │   ├── Sidebar/
+│   │   │   │   ├── Footer/
+│   │   │   │   └── Main/
+│   │   │   ├── Modal/             # 🪟 Modais (Auth, Create)
+│   │   │   ├── AlbumsDataTable/   # 📋 Tabelas
+│   │   │   ├── ArtistsDataTable/
+│   │   │   ├── UsersManagement/
+│   │   │   ├── RegionaisManagement/
+│   │   │   ├── NotificationCenter/ # 🔔 Notificações
+│   │   │   ├── Loading/           # ⏳ Spinner
+│   │   │   ├── ProtectedRoute.tsx # 🔐 Rota privada
+│   │   │   └── ui/                # 🎨 Componentes base
+│   │   │
+│   │   ├── 📁 pages/              # 📄 Páginas (rotas)
+│   │   │   ├── home/              # 🏠 Homepage
+│   │   │   ├── albums/            # 🎵 Gerenciar álbuns
+│   │   │   ├── artists/           # 🎤 Gerenciar artistas
+│   │   │   ├── favorites/         # ❤️ Favoritos
+│   │   │   └── admin/             # 👨‍💼 Painel admin
+│   │   │       ├── UsersPage.tsx
+│   │   │       └── RegionaisPage.tsx
+│   │   │
+│   │   ├── 📁 services/           # 🌐 Serviços HTTP
+│   │   │   ├── api.ts             # 🔌 Instância do axios
+│   │   │   ├── apiClient.ts       # 📡 Cliente HTTP estruturado
+│   │   │   ├── authService.ts     # 🔐 Login/Logout
+│   │   │   ├── albumService.ts    # 💿 CRUD Álbuns
+│   │   │   ├── artistService.ts   # 🎤 CRUD Artistas
+│   │   │   ├── favoriteService.ts # ❤️ Favoritos
+│   │   │   ├── statsService.ts    # 📊 Estatísticas
+│   │   │   └── webSocketService.ts # 🔗 WebSocket realtime
+│   │   │
+│   │   ├── 📁 contexts/           # 🔄 React Context
+│   │   │   └── AuthContext.tsx     # 👤 Estado global auth
+│   │   │
+│   │   ├── 📁 types/              # 📘 TypeScript types
+│   │   │   ├── api.types.ts       # 🔌 Tipos de API
+│   │   │   ├── auth.types.ts      # 🔐 Tipos de auth
+│   │   │   ├── models.ts          # 📊 Modelos de dados
+│   │   │   └── zod.types.ts       # ✔️ Schemas Zod
+│   │   │
+│   │   ├── 📁 utils/              # 🛠️ Utilitários
+│   │   │   └── tokenUtils.ts      # 🎟️ Gerenciamento de JWT
+│   │   │
+│   │   ├── 📁 routes/             # 🗺️ Configuração de rotas
+│   │   │   └── menuRoutes.ts      # 📍 Menu de navegação
+│   │   │
+│   │   ├── 📁 __tests__/          # ✅ Testes Vitest
+│   │   │   ├── App.test.tsx
+│   │   │   ├── authService.test.ts
+│   │   │   └── ...
+│   │   │
+│   │   ├── 📁 assets/             # 🖼️ Imagens e mídia
+│   │   │
+│   │   ├── App.tsx                # 🚀 Root component
+│   │   ├── main.tsx               # 📍 Entry point
+│   │   ├── index.css              # 🎨 Estilos globais
+│   │   ├── App.css                # 🎨 Estilos do App
+│   │   └── setupTests.ts          # ⚙️ Config testes
+│   │
+│   ├── public/                    # 🌐 Arquivos estáticos
+│   ├── package.json               # 📦 Dependências NPM
+│   ├── vite.config.ts             # ⚡ Config Vite
+│   ├── tsconfig.json              # 📘 Config TypeScript
+│   ├── tailwind.config.js         # 🎨 Config Tailwind
+│   ├── postcss.config.cjs         # 🎨 Config PostCSS
+│   ├── eslint.config.js           # 📝 Linting rules
+│   ├── nginx.conf                 # 🌐 Config Nginx
+│   ├── dockerfile                 # 🐳 Imagem Docker
+│   └── .gitignore
 │
-├── docker-compose.yml                # Orquestração de containers
-├── README.md                         # Este arquivo
-└── setup.sh                          # Script de setup (opcional)
+├── 📁 .idea/                      # 💡 Config IntelliJ
+├── 📄 docker-compose.yml          # 🐳 Orquestração de containers
+├── 🔨 setup.sh                    # 🚀 Script de setup
+├── 📄 README.md                   # 📖 Documentação principal
+└── 📄 README_ESTRUTURA.md         # 📂 Este arquivo
+
 ```
 
 ---
 
-## ⚡ Gerenciando o Projeto
+## 🏗️ Arquitetura do Projeto
 
-### Parar o Projeto
+### Diagrama de Componentes
 
-```bash
-# Parar todos os containers (mantém dados)
-docker-compose stop
-
-# Parar e remover containers (mantém dados)
-docker-compose down
-
-# Parar, remover containers E deletar dados
-docker-compose down -v
 ```
-
-### Reiniciar Serviços
-
-```bash
-# Reiniciar todos os serviços
-docker-compose restart
-
-# Reiniciar um serviço específico
-docker-compose restart backend
-docker-compose restart frontend
-```
-
-### Monitorar Recursos
-
-```bash
-# Ver consumo de CPU e memória
-docker stats
-
-# Ver detalhes de um container
-docker inspect sgd-backend-v1
-```
-
-### Limpeza
-
-```bash
-# Remover imagens não utilizadas
-docker image prune
-
-# Remover containers parados
-docker container prune
-
-# Remover volumes não utilizados
-docker volume prune
+┌─────────────────────────────────────────────────────────────┐
+│                     CLIENTE (Browser)                        │
+│                   React 19 + TypeScript                      │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ HTTP + WebSocket
+┌─────────────────────────────────────────────────────────────┐
+│                  FRONTEND (Nginx)                            │
+│  ▪ Components (UI, Modals, Tables)                          │
+│  ▪ Pages (Home, Albums, Artists, Admin)                    │
+│  ▪ Services (API calls, WebSocket)                         │
+│  ▪ Contexts (AuthContext para estado global)               │
+│  ▪ Utils (Token management, validation)                    │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ REST API (3333) + WS
+┌─────────────────────────────────────────────────────────────┐
+│                  BACKEND (Spring Boot)                       │
+│  ▪ Controllers (Endpoints REST)                             │
+│  ▪ Services (Business Logic)                                │
+│  ▪ Repositories (Database Access)                           │
+│  ▪ Security (JWT, Rate Limiting)                            │
+│  ▪ WebSocket (Real-time updates)                            │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+   ┌────▼─────┐  ┌────▼─────┐  ┌────▼─────┐
+   │PostgreSQL│  │  MinIO   │  │ WebSocket│
+   │  (5432)  │  │   (9000) │  │ (Server) │
+   └──────────┘  └──────────┘  └──────────┘
 ```
 
 ---
 
-## 🆘 Guia de Troubleshooting
+## 🔧 Stack de Tecnologias
 
-### ❌ "Docker não está em execução"
+### Backend (Java)
+| Camada | Tecnologia | Versão | Uso |
+|--------|-----------|--------|-----|
+| **Runtime** | Java JDK | 21 | Linguagem principal |
+| **Framework** | Spring Boot | 3.4.1 | Framework web |
+| **ORM** | Spring Data JPA | - | Acesso a dados |
+| **Banco** | PostgreSQL | 15 | Banco de dados relacional |
+| **Migrations** | Flyway | - | Versionamento de schema |
+| **Segurança** | Spring Security + JWT | 4.4.0 | Autenticação |
+| **Rate Limiting** | Bucket4j | 8.0.1 | Controle de requisições |
+| **Storage** | MinIO SDK | 8.5.7 | Armazenamento de objetos |
+| **Validation** | Spring Validation | - | Validação de dados |
+| **WebSocket** | Spring WebSocket | - | Comunicação realtime |
+| **API Docs** | SpringDoc OpenAPI | 2.8.3 | Documentação Swagger |
+| **Build** | Maven | - | Gerenciador de dependências |
 
-```bash
-# Verificar status
-docker ps
+### Frontend (TypeScript)
+| Camada | Tecnologia | Versão | Uso |
+|--------|-----------|--------|-----|
+| **Runtime** | Node.js | 18+ | Runtime JavaScript |
+| **Framework** | React | 19.2 | Biblioteca UI |
+| **Linguagem** | TypeScript | 5.9 | Type-safe JavaScript |
+| **Build** | Vite | 7.2 | Bundler moderno |
+| **Roteamento** | React Router | 7.12 | SPA routing |
+| **Styling** | Tailwind CSS | 4.1 | Utility-first CSS |
+| **HTTP Client** | Axios | 1.13 | Requisições HTTP |
+| **Forms** | React Hook Form | 7.71 | Gerenciamento de forms |
+| **Validação** | Zod | 4.3 | Schema validation |
+| **Icons** | Lucide + React Icons | - | Biblioteca de ícones |
+| **Toast/Toast** | Sonner | 2.0 | Notificações |
+| **UI Framework** | PrimeReact | 10.9 | Componentes prontos |
+| **WebSocket** | STOMP.js | 7.1 | Comunicação realtime |
+| **Testing** | Vitest | - | Test runner zero-config |
+| **Testing Lib** | React Testing Library | 16.3 | Teste de componentes |
+| **CSS Utils** | TailwindCSS + clsx | - | Merge de classes CSS |
 
-# Se retornar erro, inicie o Docker Desktop
-# Windows/Mac: Procure "Docker" no menu iniciar/launchpad
-# Linux: sudo systemctl start docker
-```
-
-### ❌ "Porta já está em uso"
-
-```bash
-# Verificar qual processo está usando a porta
-# Windows
-netstat -ano | findstr :5173
-
-# Mac/Linux
-lsof -i :5173
-
-# Matar o processo
-# Windows
-taskkill /PID <numero> /F
-
-# Mac/Linux
-kill -9 <PID>
-```
-
-### ❌ "Frontend exibe página em branco"
-
-```bash
-# 1. Verifique o console do navegador (F12)
-# 2. Limpe cache
-Ctrl + Shift + Delete
-
-# 3. Reinicie o container
-docker-compose restart frontend
-
-# 4. Verifique os logs
-docker-compose logs frontend
-```
-
-### ❌ "Erro de conexão com banco de dados"
-
-```bash
-# Aguarde alguns segundos (o banco demora para iniciar)
-# Se o erro persistir:
-
-# Verificar logs
-docker-compose logs database
-
-# Reiniciar banco
-docker-compose restart database
-```
-
-### ❌ "npm install falha"
-
-```bash
-# Deletar cache
-npm cache clean --force
-
-# Deletar node_modules
-rm -rf frontend/node_modules frontend/package-lock.json
-
-# Reinstalar
-cd frontend
-npm install
-```
-
-### ❌ "Testes falhando"
-
-```bash
-# Certifique-se que dependências estão instaladas
-cd frontend
-npm install
-
-# Rodar testes novamente
-npm test
-
-# Se falhar, veja a mensagem de erro e corrija o código
-```
+### Infraestrutura
+| Serviço | Versão | Porta | Uso |
+|---------|--------|-------|-----|
+| **Docker** | 4.0+ | - | Containerização |
+| **PostgreSQL** | 15 | 5432 | Banco de dados |
+| **MinIO** | latest | 9000/9001 | Object Storage (S3) |
+| **Nginx** | Alpine | 80 | Reverse Proxy |
+| **Docker Compose** | 3.8 | - | Orquestração |
 
 ---
 
-## 📱 Fluxo de Uso Completo
+## 🔄 Fluxo de Dados
 
-### 1️⃣ Usuário Novo (Sem Login)
-
-```
-1. Abre http://localhost:5173
-   ↓
-2. Vê página inicial sem login
-   ↓
-3. Clica em "Login"
-   ↓
-4. Insere email e senha
-   ↓
-5. Sistema valida credenciais
-   ↓
-6. Token JWT é salvo localmente
-   ↓
-7. Redirecionado para home autenticada
-```
-
-### 2️⃣ Usuário Normal (Após Login)
+### 1️⃣ Fluxo de Autenticação
 
 ```
-Home → Álbuns → Selecionar álbum → Ver detalhes
-                ↓
-             Artistas → Ver artista dos álbuns
-                ↓
-             Favoritos → Marcar como favorito (❤️)
-                ↓
-             Perfil → Ver meus favoritos
+┌──────────────────────────────────────────────────────────┐
+│                    USUÁRIO ACESSA SITE                    │
+└────────────────────┬─────────────────────────────────────┘
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │ AuthContext verifica  │
+         │ token em localStorage │
+         └────────┬──────────────┘
+                  │
+         ┌────────▼─────────────┐
+         │ Token válido?        │
+         └────────┬──────┬──────┘
+                  │      │
+            Sim   │      │   Não
+         ┌────────▼┐    ┌▼──────────┐
+         │  Home   │    │ Auth Modal│
+         │Autenticado   │  Login    │
+         └────────┬┐    └┬──────────┘
+                  ││     │
+                  ││     ▼
+                  ││   POST /auth/login
+                  ││   (email + senha)
+                  ││     │
+                  ││     ▼
+                  ││   Backend valida
+                  ││   gera JWT Token
+                  ││     │
+                  ││     ▼
+                  ││   localStorage.token
+                  ││   AuthContext.setToken
+                  ││     │
+                  │└─────┘
+                  │
+         ┌────────▼─────────┐
+         │ Requisições HTTP │
+         │ Header: JWT      │
+         └──────────────────┘
 ```
 
-### 3️⃣ Administrador
+### 2️⃣ Fluxo de CRUD (Exemplo: Álbuns)
 
 ```
-Home
-   ↓
-Admin Panel
-   ├─ Gerenciar Álbuns
-   │  ├─ Listar
-   │  ├─ Criar novo
-   │  ├─ Editar
-   │  └─ Deletar
+┌─────────────────────────────────────┐
+│    Componente ReactComponent        │
+│  (AlbumsPage.tsx ou Modal)          │
+└────────────┬────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────┐
+│   albumService.ts (Service Layer)   │
+│  ▪ albumService.getAll()            │
+│  ▪ albumService.create(data)        │
+│  ▪ albumService.update(id, data)    │
+│  ▪ albumService.delete(id)          │
+└────────────┬────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────┐
+│       apiClient.ts (HTTP Client)    │
+│  Axios + interceptors + auth header │
+└────────────┬────────────────────────┘
+             │ HTTP Request
+             ▼
+    ┌─────────────────────┐
+    │  Backend REST API   │
+    │  :3333/api/albums   │
+    └────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────────────────┐
+│     AlbumController (Handler)       │
+│  @GetMapping, @PostMapping, etc     │
+└────────────┬────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────┐
+│    AlbumService (Business Logic)    │
+│  - Validações de negócio            │
+│  - Tratamento de erros              │
+└────────────┬────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────┐
+│  AlbumRepository (Data Access)      │
+│  - Query ao banco com JPA           │
+│  - Operações CRUD                   │
+└────────────┬────────────────────────┘
+             │
+             ▼
+┌───────────────────────────────┐
+│  PostgreSQL Database          │
+│  └─ Table: albums            │
+│  └─ Table: artists           │
+│  └─ Table: album_artists     │
+└───────────────────────────────┘
+```
+
+### 3️⃣ Fluxo de Upload de Arquivo (Capa de Álbum)
+
+```
+┌──────────────────────────────────┐
+│  ImageUploadZone.tsx (Frontend)  │
+│  Usuário seleciona arquivo       │
+└────────────┬─────────────────────┘
+             │
+             ▼
+┌──────────────────────────────────┐
+│  albumService.uploadCover()      │
+│  FormData com arquivo            │
+└────────────┬─────────────────────┘
+             │ multipart/form-data
+             ▼
+┌──────────────────────────────────┐
+│  Backend Controller               │
+│  /api/albums/{id}/upload-cover   │
+└────────────┬─────────────────────┘
+             │
+             ▼
+┌──────────────────────────────────┐
+│  MinIOService (Storage Service)  │
+│  - putObject()                   │
+│  - URL pré-assinada              │
+└────────────┬─────────────────────┘
+             │
+             ▼
+┌──────────────────────────────────┐
+│  MinIO Server (S3 Compatible)    │
+│  └─ Bucket: capas-albuns-media  │
+│  └─ /album-123/cover.jpg        │
+└──────────────────────────────────┘
+```
+
+### 4️⃣ Fluxo de WebSocket (Notificações Realtime)
+
+```
+┌────────────────────────────────────┐
+│  Frontend conecta ao WebSocket     │
+│  (ao fazer login)                  │
+└────────────┬───────────────────────┘
+             │
+             ▼ STOMP/WebSocket
+┌────────────────────────────────────┐
+│  Backend WebSocket Handler         │
+│  /ws/notifications                 │
+└────────────┬───────────────────────┘
+             │
+             ▼
+┌────────────────────────────────────┐
+│  NotificationCenter (Backend)      │
+│  - Gerencia conexões ativas        │
+│  - Envia broadcast de eventos      │
+└────────────┬───────────────────────┘
+             │
+   ┌─────────┼─────────┐
+   │         │         │
+Album criado  │ Usuário adicionado
+   │         │         │
+   ▼         ▼         ▼
+Notifica todos clientes conectados
    │
-   ├─ Gerenciar Artistas
-   │  ├─ Listar
-   │  ├─ Criar novo
-   │  └─ Editar
-   │
-   ├─ Gerenciar Usuários
-   │  ├─ Listar
-   │  ├─ Ativar/Desativar
-   │  └─ Deletar
-   │
-   └─ Gerenciar Regiões
-      ├─ Listar
-      ├─ Criar nova
-      └─ Editar
+   ▼
+┌────────────────────────────────────┐
+│  NotificationCenter (Frontend)     │
+│  - Recebe mensagem WebSocket       │
+│  - Toast notification aparece      │
+│  - UI atualiza em tempo real       │
+└────────────────────────────────────┘
 ```
 
 ---
 
-## 🔐 Recursos de Segurança
+## 🗂️ Padrões de Organização
 
-O sistema implementa várias camadas de segurança:
-
-### 1. Autenticação (JWT)
+### Backend - Padrão em Camadas
 
 ```
-Cliente                          Backend
-   │                               │
-   ├─ POST /auth/login ────────────→
-   │  (email + senha)              │
-   │                               │ Valida credenciais
-   │                               │ Gera JWT Token
-   ←────── Token JWT ──────────────┤
-   │                               │
-   ├─ GET /api/v1/users ──────────→
-   │  (com Bearer Token)           │
-   │                               │ Valida Token
-   ←────── Dados ──────────────────┤
+Controller Layer
+    ↓ (DTO + Validação)
+Service Layer (Business Logic)
+    ↓ (Entity)
+Repository Layer (DAO)
+    ↓
+Database (PostgreSQL)
 ```
 
-### 2. Rate Limiting
+**Exemplo - Criar um Álbum:**
+1. `POST /api/albums` → AlbumController.create()
+2. Valida DTO com @Valid
+3. AlbumService.create() → lógica de negócio
+4. AlbumRepository.save() → persiste no banco
+5. Retorna AlbumResponse.dto
 
-Limite de requisições por IP para evitar abuso:
-- 100 requisições por minuto
+### Frontend - Padrão Modular
 
-### 3. CORS
+```
+Pages (Route handlers)
+    ↓ (renderiza)
+Components (UI elements)
+    ↓ (chama)
+Services (API calls)
+    ↓ (requisita)
+API Client (HTTP communication)
+```
 
-Apenas requisições de `localhost:5173` (frontend) são aceitas
+**Exemplo - Listar Álbuns:**
+1. `AlbumsPage.tsx` → monta layout
+2. `<AlbumsDataTable />` → renderiza tabela
+3. `albumService.getAll()` → busca dados
+4. `apiClient.get('/albums')` → HTTP GET
+5. Atualiza estado e re-renderiza
 
-### 4. Criptografia de Senhas
+---
 
-Senhas são armazenadas com hash (não em texto plano)
+## 🚀 Como Contribuir
+
+### Adicionando uma Nova Feature no Backend
+
+#### 1. Criar Entity (Modelo de Dados)
+```java
+// src/main/java/br/gov/mt/seplag/sgd/entity/MyEntity.java
+@Entity
+@Table(name = "my_table")
+@Data
+@NoArgsConstructor
+public class MyEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;
+}
+```
+
+#### 2. Criar Repository
+```java
+// src/main/java/br/gov/mt/seplag/sgd/repository/MyEntityRepository.java
+public interface MyEntityRepository extends JpaRepository<MyEntity, Long> {
+    List<MyEntity> findByNameContaining(String name);
+}
+```
+
+#### 3. Criar Service
+```java
+// src/main/java/br/gov/mt/seplag/sgd/service/MyEntityService.java
+@Service
+@RequiredArgsConstructor
+public class MyEntityService {
+    private final MyEntityRepository repository;
+    
+    public List<MyEntity> getAll() {
+        return repository.findAll();
+    }
+}
+```
+
+#### 4. Criar Controller
+```java
+// src/main/java/br/gov/mt/seplag/sgd/controller/MyEntityController.java
+@RestController
+@RequestMapping("/api/my-entities")
+@RequiredArgsConstructor
+public class MyEntityController {
+    private final MyEntityService service;
+    
+    @GetMapping
+    public ResponseEntity<List<MyEntity>> getAll() {
+        return ResponseEntity.ok(service.getAll());
+    }
+}
+```
+
+#### 5. Criar Migration SQL
+```sql
+-- src/main/resources/db/migration/V16__create_my_table.sql
+CREATE TABLE my_table (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Adicionando uma Nova Feature no Frontend
+
+#### 1. Criar Service
+```typescript
+// src/services/myEntityService.ts
+import { apiClient } from './apiClient';
+
+export const myEntityService = {
+  getAll: async () => {
+    const response = await apiClient.get('/my-entities');
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await apiClient.post('/my-entities', data);
+    return response.data;
+  },
+};
+```
+
+#### 2. Criar Tipos TypeScript
+```typescript
+// src/types/models.ts
+export interface MyEntity {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+```
+
+#### 3. Criar Componente
+```typescript
+// src/components/MyEntityTable/MyEntityTable.tsx
+import { useEffect, useState } from 'react';
+import { myEntityService } from '@/services/myEntityService';
+
+export function MyEntityTable() {
+  const [entities, setEntities] = useState<MyEntity[]>([]);
+  
+  useEffect(() => {
+    myEntityService.getAll().then(setEntities);
+  }, []);
+  
+  return (
+    <div>
+      {entities.map(entity => (
+        <div key={entity.id}>{entity.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+#### 4. Criar Página
+```typescript
+// src/pages/my-entities/MyEntitiesPage.tsx
+import { MyEntityTable } from '@/components/MyEntityTable';
+
+export function MyEntitiesPage() {
+  return (
+    <div className="p-6">
+      <h1>Minhas Entidades</h1>
+      <MyEntityTable />
+    </div>
+  );
+}
+```
+
+#### 5. Registrar Rota
+```typescript
+// src/routes/menuRoutes.ts
+export const menuRoutes = [
+  // ...
+  {
+    path: '/my-entities',
+    label: 'Minha Entidade',
+    icon: 'AiOutlineFile',
+  },
+  // ...
+];
+```
+
+---
+
+## 📊 Dependências Principais
+
+### Backend - `pom.xml`
+```xml
+<!-- Spring Boot 3.4.1 -->
+<!-- PostgreSQL Driver -->
+<!-- Spring Security + JWT -->
+<!-- MinIO Client -->
+<!-- Bucket4j (Rate Limiting) -->
+<!-- Flyway (Database Migrations) -->
+<!-- SpringDoc OpenAPI (Swagger) -->
+<!-- Lombok (Reduce boilerplate) -->
+```
+
+### Frontend - `package.json`
+```json
+{
+  "dependencies": {
+    "react": "^19.2.0",
+    "typescript": "^5.9",
+    "vite": "^7.2",
+    "tailwindcss": "^4.1",
+    "axios": "^1.13.2",
+    "react-hook-form": "^7.71",
+    "zod": "^4.3.5",
+    "@stomp/stompjs": "^7.1.2"
+  }
+}
+```
+
+---
+
+## 🐳 Infraestrutura
+
+### Docker Compose Services
+
+| Serviço | Imagem | Porta | Função |
+|---------|--------|-------|--------|
+| **database** | postgres:15-alpine | 5432 | PostgreSQL DB |
+| **backend** | ./backend (Dockerfile) | 3333 | Spring Boot API |
+| **storage** | minio/minio:latest | 9000/9001 | Object Storage |
+| **storage-setup** | minio/mc | - | Config bucket MinIO |
+| **frontend** | ./frontend (Dockerfile) | 5173 | React App + Nginx |
+
+### Variáveis de Ambiente Importante
 
 ```bash
-# Exemplo: Senha "senha123" é armazenada como:
-$2a$10$NgIE3h.zH0.wXPqaKtP7y.eL6DzI1vE0Pq6N3oN9wqH0KqH0O0Qb.
-```
+# Backend
+SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/db_discografia_core
+SPRING_DATASOURCE_USERNAME=srv_discografia
+SPRING_DATASOURCE_PASSWORD=P@ssw0rd_Seplag2026!
+APP_MINIO_URL=http://storage:9000
+APP_MINIO_ACCESS-KEY=admin_storage
+APP_MINIO_SECRET-KEY=Storage_Key_2026!
 
-### 5. Validação de Entrada
-
-Todas as requisições são validadas no backend
-
----
-
-## 🚦 Comandos Rápidos
-
-```bash
-# Iniciar
-docker-compose up --build
-
-# Parar
-docker-compose down
-
-# Ver status
-docker-compose ps
-
-# Ver logs
-docker-compose logs -f
-
-# Entrar no backend
-docker exec -it sgd-backend-v1 /bin/bash
-
-# Entrar no banco de dados
-docker exec -it sgd-postgres-v1 psql -U srv_discografia -d db_discografia_core
-
-# Testes (frontend)
-cd frontend && npm test
-
-# Build (frontend)
-cd frontend && npm run build
-
-# Verificar saúde da API
-curl http://localhost:3333/actuator/health
+# Frontend
+VITE_API_BASE_URL=http://localhost:3333
+VITE_WS_BASE_URL=ws://localhost:3333
 ```
 
 ---
 
-## 📚 Documentação Adicional
+## 🔐 Segurança
 
-- 🔗 [Docker Documentation](https://docs.docker.com/)
-- 🔗 [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- 🔗 [React Documentation](https://react.dev/)
-- 🔗 [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+### Criptografia e Autenticação
+- **JWT Tokens:** Validados em cada requisição
+- **Password Hashing:** BCrypt (Spring Security)
+- **Rate Limiting:** Bucket4j - máx 100 req/min por IP
+- **CORS:** Habilitado para frontend
+- **HTTPS:** Recomendado em produção
 
----
-
-## 📊 Resumo do Setup
-
-| Etapa | Comando | Tempo | Status |
-|-------|---------|-------|--------|
-| Instalar Docker | - | 10 min | ⏳ |
-| Instalar Git | - | 5 min | ⏳ |
-| Clonar projeto | `git clone ...` | 1 min | ⏳ |
-| Build/Start | `docker-compose up --build` | 3-5 min | ⏳ |
-| Acesso | Abrir localhost:5173 | 1 min | ✅ |
-| **Total** | - | **~20 minutos** | ✅ |
+### Boas Práticas
+✅ Senhas nunca são retornadas na API
+✅ Tokens JWT com expiração
+✅ Refresh tokens para renovação
+✅ HTTPS em produção
+✅ SQL Injection prevenido com JPA/Parameterized queries
 
 ---
 
-## 🤝 Contribuindo
+## 📝 Convenções de Código
 
-Quer contribuir? Ótimo!
+### Backend (Java)
+- **Classes:** PascalCase (ex: `AlbumService`)
+- **Métodos:** camelCase (ex: `getAlbumById`)
+- **Constantes:** UPPER_SNAKE_CASE (ex: `MAX_FILE_SIZE`)
+- **Pacotes:** lowercase com ponto (ex: `br.gov.mt.seplag.sgd.service`)
 
-1. **Faça um fork** do repositório
-2. **Crie uma branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit suas mudanças** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push para a branch** (`git push origin feature/AmazingFeature`)
-5. **Abra um Pull Request**
-
-### Padrões de Código
-
-- **Backend:** Java 21, Spring Boot 3, Maven
-- **Frontend:** React 19, TypeScript, ESLint
-- **Commits:** Mensagens claras em português ou inglês
-- **Testes:** Código novo deve ter testes
+### Frontend (TypeScript)
+- **Componentes:** PascalCase (ex: `AlbumsDataTable`)
+- **Funções:** camelCase (ex: `fetchAlbums`)
+- **Interfaces:** PascalCase prefixado com I (ex: `IAlbum`) ou sem I
+- **Tipos:** PascalCase (ex: `type AlbumDTO`)
+- **Constantes:** UPPER_SNAKE_CASE (ex: `API_BASE_URL`)
 
 ---
 
-## 📝 Licença
+## 📚 Referências Úteis
 
-Este projeto é parte do Desafio Full Stack SEPLAG-MT 2026.
-
----
-
-## 📞 Suporte
-
-- 📧 **Email:** [seu-email@seplag.com]
-- 💬 **Issues:** Abra uma issue no repositório
-- 📖 **Wiki:** Documentação adicional em construção
-
----
-
-## ✨ Agradecimentos
-
-Desenvolvido pela equipe de desenvolvimento da SEPLAG-MT.
-
-### Tecnologias Utilizadas
-
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [React](https://react.dev/)
-- [Docker](https://www.docker.com/)
-- [PostgreSQL](https://www.postgresql.org/)
-- [MinIO](https://min.io/)
+- [Spring Boot Docs](https://spring.io/projects/spring-boot)
+- [React Docs](https://react.dev)
+- [PostgreSQL Docs](https://www.postgresql.org/docs/)
 - [Tailwind CSS](https://tailwindcss.com/)
+- [Vite Docs](https://vitejs.dev/)
+- [Docker Docs](https://docs.docker.com/)
 
 ---
 
-**Versão:** 1.0.0  
-**Data:** Fevereiro 2026  
-**Status:** ✅ Pronto para Produção
-
-[status-badge]: https://img.shields.io/badge/status-ativo-brightgreen?style=flat-square
-[docker-badge]: https://img.shields.io/badge/docker-4.0+-2496ED?style=flat-square&logo=docker
-[nodejs-badge]: https://img.shields.io/badge/node.js-18%2B-339933?style=flat-square&logo=node.js
+**Última atualização:** Fevereiro 2026
+**Versão do Projeto:** 0.0.1-SNAPSHOT
